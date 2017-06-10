@@ -1,0 +1,22 @@
+# Imagen Base
+	FROM httpd:2.4.25
+	RUN apt-get update && apt-get install -y  
+	RUN apt-get -y install software-properties-common mc nano wget zip unzip gzip 
+	RUN apt-get -y install libapache2-mod-php5 php5  php5-cli php5-pgsql php5-gd php5-curl php5-xsl
+
+# Configuración de apache
+	RUN { \
+		
+		echo "extension=pdo.so" >>  /etc/php5/cli/php.ini	\
+		echo "extension=pdo.so" >> /etc/php5/apache2/php.ini	 \
+		echo "extension=pdo_pgsql.so" >>  /etc/php5/cli/php.ini	 \
+		echo "extension=pdo_pgsql.so" >> /etc/php5/apache2/php.ini \
+
+		a2enmod rewrite \
+		a2enmod setenvif	 \
+	}
+
+	EXPOSE 80
+#	CMD ["httpd-foreground"]
+	CMD ["bash", "-c", "rm -rf /run/httpd/* && /usr/sbin/apachectl -D FOREGROUND"]
+	
