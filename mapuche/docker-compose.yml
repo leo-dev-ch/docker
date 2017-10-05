@@ -1,0 +1,11 @@
+mapuche:
+  image: toba-dev
+  ports:
+    - "80:80"
+  volumes:
+   -  /usr/local/siu:/usr/local/siu
+#    -  /home/rrhh/docker/siumapuche:/var/www/html/mapuche
+   - /usr/local/siu/mapuche/mapuche/instalacion/toba.conf:/etc/apache2/sites-enabled/mapuche.conf
+   - /home/rrhh/docker/501-rrhh.unlar.edu.ar:/etc/apache2/sites-enabled/501-rrhh.unlar.edu.ar
+   - /home/rrhh/docker/501-ssl-rrhh.unlar.edu.ar:/etc/apache2/sites-enabled/501-ssl-rrhh.unlar.edu.ar
+   - /usr/local/siu/mapuche/mapuche/aplicacion/php/modelos/negocio/xlib/xlib_alias.conf:/etc/apache2/sites-enabled/mapuche_xlib.conf
