@@ -1,0 +1,22 @@
+postgres9.4:
+  image: postgres:9.4
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+  volumes:
+    - /usr/local/postgresql:/var/lib/postgresql/data
+  restart: always
+
+toba-dev:
+#  build: .
+  image: leogaray/toba-dev
+  ports:
+    - "80:80"
+  links:
+    - postgres9.4
+  volumes:
+#sistemas SIU    
+    - /home/sistemas/2.6/siu_kolla:/usr/local/toba/proyectos/kolla
+  restart: always
