@@ -1,0 +1,10 @@
+# Dynamic Configuration
+[http.routers.my-api]
+  rule = "Host(`monitor.leogaray.com.ar`)"
+  service = "api@internal"
+  middlewares = ["auth"]
+
+[http.middlewares.auth.basicAuth]
+  users = [
+    "admin:$apr1$3qY8eKZo$y4g.EpOm7taD.6pq7KO650",
+  ]

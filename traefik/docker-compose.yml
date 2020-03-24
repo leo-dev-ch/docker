@@ -1,0 +1,95 @@
+version: '3'
+
+networks:
+  web: # new docker network to work
+    external: true
+  internal:
+    external: false  
+services:
+  reverse-proxy:
+    image: traefik:v2.1 # The official v2 Traefik docker image
+    command: 
+      - "--api.insecure=true" 
+      - "--providers.docker"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesResolvers.le.acme.email=leo.garay9@gmail.com"
+      - "--certificatesResolvers.le.acme.storage=acme.json"
+      - "--certificatesResolvers.le.acme.tlsChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443" # The Web UI (enabled by --api.insecure=true)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - ./acme.json:/acme.json
+    container_name: traefik
+    networks:
+      - web
+    labels:
+      #- traefik.frontend.rule=Host(`monitor.leogaray.com.ar`) # domain to access the dashboard odd traefik
+      - traefik.http.routers.api.rule=Host(`monitor.leogaray.com.ar`)
+      - traefik.port=8080 # default port to access the dashboard for traefik 
+      - traefik.http.routers.http_catchall.rule=HostRegexp(`{any:.+}`)
+      - traefik.http.routers.http_catchall.entrypoints=web
+      - traefik.http.routers.http_catchall.middlewares=https_redirect
+      - traefik.http.middlewares.https_redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https_redirect.redirectscheme.permanent=true
+  whoami:
+    image: "containous/whoami"
+    networks:
+        - web
+    labels:
+      - traefik.http.routers.whoami.rule=Host(`leogaray.com.ar`)
+      - traefik.http.routers.whoami.tls=true
+      - traefik.http.routers.whoami.tls.certresolver=le
+      - traefik.http.middlewares.whoami.compress=true
+      - traefik.http.routers.whoami.middlewares=whoami@docker
+#####
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: 420420
+    networks:
+      - internal
+    labels:
+      - traefik.enable=false
+  blog:
+    image: wordpress:4.9.8-apache
+    environment:
+      WORDPRESS_DB_PASSWORD: 420420
+    labels:
+      - traefik.backend=blog
+      - traefik.docker.network=web
+      - traefik.port=80
+
+      - traefik.http.routers.blog.rule=Host(`kiki.leogaray.com.ar`)
+      - traefik.http.routers.blog.tls=true
+      - traefik.http.routers.blog.tls.certresolver=le
+      - traefik.http.middlewares.blog.compress=true
+      - traefik.http.routers.blog.middlewares=blog@docker
+    networks:
+      - internal
+      - web
+    depends_on:
+      - mysql    
+  adminer:
+    image: adminer:4.6.3-standalone
+    labels:
+      - traefik.backend=adminer
+      - traefik.docker.network=web
+      - traefik.port=8080
+
+      - traefik.http.routers.adminer.rule=Host(`admin.leogaray.com.ar`)
+      - traefik.http.routers.adminer.tls=true
+      - traefik.http.routers.adminer.tls.certresolver=le
+      - traefik.http.middlewares.adminer.compress=true
+      - traefik.http.routers.adminer.middlewares=adminer@docker
+
+    networks:
+      - internal
+      - web
+    depends_on:
+      - mysql
